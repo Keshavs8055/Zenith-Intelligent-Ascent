@@ -24,7 +24,7 @@ The project is structured as a Turborepo monorepo.
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/zenith.git
+    git clone https://github.com/Keshavs8055/Zenith-Intelligent-Ascent
     cd zenith
     ```
 2.  **Install dependencies:**
