@@ -1,121 +1,74 @@
-# 🌄 Zenith
+# ⛰️ Zenith
 
-> A calm, modern, and motivating productivity platform — where your progress feels like climbing a mountain.  
-> **Plans → Milestones → Tasks → Summit.**
+> **Zenith** is a personal growth platform where your progress feels like climbing a mountain. It’s an AI-powered planning engine that turns ambitious goals into a realistic, step-by-step journey.
 
----
-
-## 🚀 Vision
-
-Zenith is more than just a task manager. It’s a **personal growth companion** designed to make progress **immersive, minimal, and motivating**.  
-The app combines **structured productivity** with **calm design and smart recommendations**, so users feel like they’re steadily climbing toward their goals.
-
-### Core Ideas
-- **Mountain Climb Progression**  
-  Visualize plans, milestones, and tasks as part of a mountain climb. Every completed milestone takes you closer to the summit.
-- **Daily Focus**  
-  Clear distribution of **today’s goals**, **current milestone**, and **upcoming challenges**.
-- **Calm & Motivating Design**  
-  Modern UI with smooth animations, gradients, and an uplifting aesthetic.
-- **Smart Assistance** (future)  
-  AI-powered daily goal generation, insights, and motivational nudges.
+**Plan the path. Claim the peak.**
 
 ---
 
-## 🏗 Current Structure
+### 🌟 The Vision
 
-zenith/
-│
-├── apps/
-│   ├── api/                  # Backend service (Next.js API, DB-ready)
-│   └── web/                  # Frontend (Next.js, Tailwind, shadcn/ui)
-│
-├── packages/
-│   ├── types/                # Shared Zod schemas, TypeScript types, domain models
-│   └── utils/                # (future) shared helpers (formatters, API client, auth utils)
-│   ...
-├── package.json              # Root deps & scripts
-├── pnpm-workspace.yaml       # Monorepo workspace config
-├── tsconfig.base.json        # Base TS config for monorepo
-├── turbo.json                # Turborepo pipeline config
-└── .gitignore
+Most to-do apps are just lists. Zenith is a **smart productivity companion** that makes progress tangible, visual, and motivating. It combines intelligent, adaptive planning with a calm, modern design to help you conquer your goals, one milestone at a time.
+
+  * **Mountain Climb Progression:** Visualize your projects as a mountain climb. Every completed milestone is a checkpoint on your ascent to the summit.
+  * **Intelligent Planning:** The AI engine breaks down your high-level goals into realistic daily tasks, adapting to your pace and providing motivational nudges.
+  * **Calm & Focused Design:** A minimal, modern interface designed to reduce overwhelm and keep you focused on what's next.
 
 ---
 
-## ✅ What We’ve Built So Far
+### 🚀 Getting Started
 
-- **Monorepo Setup**
-  - Turborepo + pnpm with `apps/` and `packages/`.
-  - Shared TypeScript + Zod schemas across frontend & backend.
-- **Frontend (apps/web)**
-  - Next.js + Tailwind + shadcn/ui working setup.
-  - Ready for UI development (auth, dashboard, progress views).
-- **Backend (apps/api)**
-  - Scaffolding in place with validation via shared schemas.
-  - DB-ready structure (Postgres + Prisma planned).
-- **Shared Types (packages/types)**
-  - **Auth**: `RegisterUser`, `Login`, `Session`.
-  - **Tasks**: `Task`, `Reminder`, `DailyGoal`.
-  - **Plans & Progress**: `Plan`, `Milestone`, `ProgressSnapshot`.
-  - **Shared**: `ApiResponse`, `PaginatedResponse`, `NavItem`, `QuoteOfTheDay`.
-  - **AI (planned)**: `AIRecommendation`, `GenerateDailyGoals`.
+The project is structured as a Turborepo monorepo.
 
----
+**Prerequisites:** Node.js, pnpm
 
-## 🔮 Next Steps
-
-1. **Backend API Routes**
-   - `/auth/register`, `/auth/login`
-   - `/plans` (CRUD), `/tasks` (CRUD)
-
-2. **Frontend Integration**
-   - Auth pages (login, register, forgot password).
-   - Dashboard shell (sidebar, nav, landing).
-   - Mountain-climb progress visualization.
-
-3. **Database**
-   - MongoDb + Prisma for `User`, `Plan`, `Task`, `Milestone`.
-
-4. **Shared Utilities**
-   - API client wrapper (`apiFetch<T>()`).
-   - Date & progress tracking helpers.
-
-5. **UI & Animations**
-   - Framer Motion transitions.
-   - Sleek, minimal, calm visual storytelling.
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/zenith.git
+    cd zenith
+    ```
+2.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
+3.  **Start the development server:**
+    ```bash
+    pnpm run dev
+    ```
+    This will start both the web frontend (`apps/web`) and the API backend (`apps/api`).
 
 ---
 
-## 🧠 Long-Term Vision
+### 🛠️ Tech Stack
 
-- **AI Assistance**  
-  Generate daily goals and progress insights.
-- **Motivation Layer**  
-  Streaks, motivational quotes, subtle nudges.
-- **Immersive Experience**  
-  Interactive mountain visualization, checkpoint highlights, and summit celebrations.
+**Monorepo:** Turborepo, pnpm
 
----
+**Frontend:** Next.js (App Router), React, TailwindCSS, shadcn/ui
 
-## 🛠 Tech Stack
+**Backend:** Next.js API Routes, Prisma, MongoDB
 
-- **Framework**: [Next.js](https://nextjs.org/)  
-- **Styling**: [TailwindCSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)  
-- **Backend**: Next.js API routes (Express/Fastify later if needed)  
-- **Database**: MongoDB + Prisma (planned)  
-- **Validation & Types**: Zod + TypeScript  
-- **Monorepo Tools**: Turborepo + pnpm  
+**Shared:** TypeScript, Zod
 
 ---
 
-## 🤝 Contributing
+### 🗺️ Current Status
 
-This project is in its **early stages**. Contributions, ideas, and discussions are welcome.  
-Open an issue or start a discussion if you’d like to collaborate.
+We have a working monorepo scaffold with shared TypeScript and Zod schemas.
+
+  * **Frontend:** Next.js + Tailwind + shadcn/ui setup is complete, ready for UI development.
+  * **Backend:** API routes are defined and ready to be connected to the database.
+  * **Schemas:** The core data models for `User`, `Plan`, `Milestone`, and `Task` are defined and shared across the apps.
 
 ---
 
-## 📜 License
+### 🤝 Contributing
 
-MIT License.  
-Feel free to fork, use, and adapt Zenith for your own needs.
+This project is in its early stages, and we welcome collaboration.
+
+If you'd like to contribute, please feel free to open an issue or start a discussion.
+
+---
+
+### 📜 License
+
+Zenith is licensed under the MIT License.
