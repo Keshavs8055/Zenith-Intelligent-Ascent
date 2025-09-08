@@ -11,10 +11,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@zenith/types": ["packages/types/src"],
-      "@zenith/utils": ["packages/utils/src"],
-      "@zenith/ai": ["packages/ai/src"],
-      "@zenith/ui": ["packages/ui/src"]
+      "@zenith/types": ["packages/types/src"]
     }
   }
 }

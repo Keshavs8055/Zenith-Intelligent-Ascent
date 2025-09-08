@@ -11,7 +11,11 @@ app.use(cors());
 app.use(express.json());
 
 // Health Check
-app.get("/health", (_, res) => res.json({ status: "OK", service: "API" }));
+app.get("/health", (_, res) =>
+  res
+    .status(200)
+    .json({ success: true, statusCode: 200, message: "Smooth like butter!" })
+);
 
 // Connect MongoDB
 (async () => {
@@ -26,3 +30,18 @@ app.get("/health", (_, res) => res.json({ status: "OK", service: "API" }));
     process.exit(1);
   }
 })();
+
+// import { createClient } from "redis";
+
+// const client = createClient({
+//   username: "default",
+//   password: "mdOQT4ztqJwz6grIlY1USJ0ewAMMGHqI",
+//   socket: {
+//     host: "redis-11143.c241.us-east-1-4.ec2.redns.redis-cloud.com",
+//     port: 11143,
+//   },
+// });
+
+// client.on("error", (err) => console.log("Redis Client Error", err));
+
+// await client.connect();

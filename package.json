@@ -5,10 +5,19 @@
     "apps/*",
     "packages/*"
   ],
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "install:all": "pnpm install --recursive",
+    "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=web",
+    "dev:api": "turbo run dev --filter=api",
+    "build": "turbo run build --parallel",
+    "lint": "turbo run lint"
+  },
   "devDependencies": {
-    "turbo": "latest",
-    "typescript": "^5.3.3",
-    "eslint": "^9.0.0",
-    "prettier": "^3.2.5"
+    "eslint": "^9.35.0",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
   }
 }

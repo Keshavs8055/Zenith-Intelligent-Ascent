@@ -1,8 +1,9 @@
-export interface ApiResponse<T> {
+export type ApiResponse<T = undefined> = {
   success: boolean;
+  statusCode: number;
+  message?: string;
   data?: T;
-  error?: string;
-}
+};
 
 export type PaginatedResponse<T> = ApiResponse<{
   items: T[];
