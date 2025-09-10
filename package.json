@@ -9,9 +9,13 @@
   "scripts": {
     "install:all": "pnpm install --recursive",
     "dev": "turbo run dev --parallel",
-    "dev:web": "turbo run dev --filter=web",
-    "dev:api": "turbo run dev --filter=api",
+    "dev:web": "pnpm --filter @zenith/web dev",
+    "dev:api": "pnpm --filter @zenith/api dev",
     "build": "turbo run build --parallel",
+    "build:web": "pnpm --filter @zenith/web build",
+    "build:api": "pnpm --filter @zenith/api build",
+    "start:web": "pnpm --filter @zenith/web start",
+    "start:api": "pnpm --filter @zenith/api start",
     "lint": "turbo run lint"
   },
   "devDependencies": {

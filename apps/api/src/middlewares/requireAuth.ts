@@ -21,12 +21,12 @@ export const requireAuth = async (
   try {
     const authHeader = req.headers["authorization"];
     if (!authHeader) {
-      return sendResponse(res, 401, undefined, "Missing authorization header");
+      return sendResponse(res, 401, undefined, "User needs to be logged in.");
     }
 
     const token = authHeader.split(" ")[1];
     if (!token) {
-      return sendResponse(res, 401, undefined, "Missing access token");
+      return sendResponse(res, 401, undefined, "User needs to be logged in.");
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
@@ -39,12 +39,12 @@ export const requireAuth = async (
       "-password -refreshToken"
     );
     if (!user) {
-      return sendResponse(res, 404, undefined, "User not found");
+      return sendResponse(res, 404, undefined, "User not found.");
     }
 
     req.user = { id: user.id, email: user.email, role: user.role };
     next();
   } catch (err) {
-    return sendResponse(res, 401, undefined, "Invalid or expired token");
+    return sendResponse(res, 401, undefined, "Kindly login again.");
   }
 };

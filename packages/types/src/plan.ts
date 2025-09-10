@@ -1,37 +1,30 @@
-import { Task } from "./task";
+import { z } from "zod";
 
-export interface Milestone {
-  id: string;
-  planId: string;
-  name: string;
-  order: number; // order in climb
-  targetPercent: number; // where the flag sits on mountain (0–100)
-  dueDate?: string;
-}
+export const GeneratePlanSchema = z.object({
+  prompt: z.string().min(5),
+  deadline: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message:
+        "Invalid date format, expected ISO string (YYYY-MM-DD or datetime)",
+    })
+    .optional()
+    .transform((v) => (v ? new Date(v) : undefined)),
+  hoursPerDay: z.number().min(1).default(1),
+});
+
+export type GeneratePlanInput = z.infer<typeof GeneratePlanSchema>;
 
 export interface Plan {
   id: string;
+  userId: string;
   title: string;
-  description?: string;
-  targetDate: string; // summit date
+  prompt: string;
+  taskIds: string[];
+  deadline?: string;
+  hoursPerDay?: number;
+  status: "active" | "completed" | "archived";
+  adaptive: boolean;
   createdAt: string;
   updatedAt: string;
-  tasks: Task[];
-  milestones?: Milestone[];
-}
-
-export interface DailyGoal {
-  id: string;
-  planId: string;
-  date: string; // specific day
-  tasks: Task[];
-  generatedByAI: boolean;
-}
-
-export interface ProgressSnapshot {
-  planId: string;
-  completionPercent: number;
-  completedTasks: number;
-  totalTasks: number;
-  reachedMilestones: string[]; // milestone ids
 }

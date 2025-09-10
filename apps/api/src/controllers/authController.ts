@@ -6,6 +6,7 @@ import { catchAsync, sendResponse } from "../utils/globalWrapper.js";
 import { generateToken } from "../utils/token.js";
 import z from "zod";
 import { AuthenticatedRequest } from "../middlewares/requireAuth.js";
+import { AppError } from "../utils/appError.js";
 
 // -------------------
 // Controllers
@@ -14,9 +15,7 @@ export const UserSignUpController = catchAsync(async (req, res) => {
   const parsed = RegisterUserSchema.parse(req.body);
 
   const existingUser = await UserModel.findOne({ email: parsed.email });
-  if (existingUser) {
-    return sendResponse(res, 400, undefined, "Email already in use");
-  }
+  if (existingUser) throw new AppError("Email already in use", 400);
 
   const hashedPassword = await bcrypt.hash(parsed.password, 10);
 
@@ -28,10 +27,8 @@ export const UserSignUpController = catchAsync(async (req, res) => {
   });
 
   const refreshToken = generateToken(user.id, user.email, user.role, "7d");
-
   user.refreshToken = refreshToken;
   await user.save();
-
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -43,7 +40,7 @@ export const UserSignUpController = catchAsync(async (req, res) => {
   const session: Session = {
     user: {
       id: user.id,
-      name: user.name,
+      name: user.name || "",
       email: user.email,
       role: user.role,
     },
@@ -51,19 +48,26 @@ export const UserSignUpController = catchAsync(async (req, res) => {
     expiresAt: new Date(Date.now() + 3600000).toISOString(),
   };
 
-  return sendResponse(res, 201, session);
+  return sendResponse(res, 201, session, "User registered successfully");
 });
 
 export const UserLoginController = catchAsync(async (req, res) => {
   const parsed = LoginSchema.parse(req.body);
 
   const user = await UserModel.findOne({ email: parsed.email });
-  if (!user) return sendResponse(res, 404, undefined, "User not found");
+  if (!user || !user.name) throw new AppError("User not found", 404);
 
   const isMatch = await bcrypt.compare(parsed.password, user.password);
-  if (!isMatch) return sendResponse(res, 401, undefined, "Invalid credentials");
+  if (!isMatch) throw new AppError("Invalid password. Try again.", 401);
 
   const token = generateToken(user.id, user.email, user.role, "1h");
+  const refreshToken = generateToken(user.id, user.email, user.role, "7d");
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
 
   const session: Session = {
     user: {
@@ -75,13 +79,8 @@ export const UserLoginController = catchAsync(async (req, res) => {
     token,
     expiresAt: new Date(Date.now() + 3600000).toISOString(),
   };
-  const refreshToken = generateToken(user.id, user.email, user.role, "7d");
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-  return sendResponse<Session>(res, 200, session);
+
+  return sendResponse<Session>(res, 200, session, "Login successful");
 });
 
 const ForgotPasswordSchema = z.object({
@@ -92,7 +91,7 @@ export const ForgotPasswordController = catchAsync(async (req, res) => {
   const { email } = ForgotPasswordSchema.parse(req.body);
 
   const user = await UserModel.findOne({ email });
-  if (!user) return sendResponse(res, 404, undefined, "User not found");
+  if (!user) throw new AppError("User not found", 404);
 
   const resetToken = jwt.sign(
     { id: user.id },
@@ -100,15 +99,17 @@ export const ForgotPasswordController = catchAsync(async (req, res) => {
     { expiresIn: "15m" }
   );
 
-  return sendResponse(res, 200, {
-    message: "Password reset token generated",
-    resetToken,
-  });
+  return sendResponse(
+    res,
+    200,
+    { resetToken },
+    "Password reset token generated"
+  );
 });
 
 export const RefreshTokenController = catchAsync(async (req, res) => {
   const token = req.cookies.refreshToken;
-  if (!token) return sendResponse(res, 401, undefined, "Missing refresh token");
+  if (!token) throw new AppError("Missing refresh token", 401);
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
     id: string;
@@ -117,11 +118,12 @@ export const RefreshTokenController = catchAsync(async (req, res) => {
   };
 
   const user = await UserModel.findById(decoded.id);
-  if (!user || user.refreshToken !== token)
-    return sendResponse(res, 403, undefined, "Invalid refresh token");
+  if (!user || user.refreshToken !== token) {
+    throw new AppError("Invalid refresh token", 403);
+  }
 
   const accessToken = generateToken(user.id, user.email, user.role, "15m");
-  return sendResponse(res, 200, { accessToken });
+  return sendResponse(res, 200, { accessToken }, "Access token refreshed");
 });
 
 export const LogoutController = catchAsync(async (req, res) => {
@@ -149,7 +151,9 @@ export const EditProfileController = catchAsync(
       new: true,
     }).select("-password -refreshToken");
 
-    return sendResponse(res, 200, updated);
+    if (!updated) throw new AppError("User not found", 404);
+
+    return sendResponse(res, 200, updated, "Profile updated successfully");
   }
 );
 
@@ -164,8 +168,9 @@ export const ResetPasswordController = catchAsync(async (req, res) => {
   const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
     id: string;
   };
+
   const user = await UserModel.findById(decoded.id);
-  if (!user) return sendResponse(res, 404, undefined, "User not found");
+  if (!user) throw new AppError("User not found", 404);
 
   user.password = await bcrypt.hash(newPassword, 10);
   await user.save();

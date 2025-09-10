@@ -1,26 +1,30 @@
-import { Schema, model, Document } from "mongoose";
-import { UserRole } from "@zenith/types";
+import { Schema, model } from "mongoose";
 
-interface IUser extends Document {
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  createdAt: Date;
-  updatedAt: Date;
-  refreshToken?: string;
-}
-
-const userSchema = new Schema<IUser>(
+const UserSchema = new Schema(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    name: String,
+    email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["user", "admin"], default: "user" },
+    isVerified: { type: Boolean, default: false },
+    refreshToken: { type: String },
+
+    // NEW: personalization fields
+    timezone: { type: String, default: "UTC" },
+    preferences: {
+      dailyStudyHours: { type: Number, default: 2 },
+      preferredStudyTimes: [{ type: String }], // e.g. ["08:00-10:00", "19:00-21:00"]
+      notificationChannel: {
+        type: String,
+        enum: ["email", "push", "sms", "none"],
+        default: "push",
+      },
+    },
+
+    createdAt: Date,
+    updatedAt: Date,
   },
   { timestamps: true }
 );
 
-const UserModel = model<IUser>("User", userSchema);
-
-export default UserModel;
+export default model("User", UserSchema);

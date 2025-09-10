@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { errorHandler } from "middlewares/errorHandler.js";
 
 dotenv.config();
 const app = express();
@@ -16,6 +17,12 @@ app.get("/health", (_, res) =>
     .status(200)
     .json({ success: true, statusCode: 200, message: "Smooth like butter!" })
 );
+
+// Routes
+app.use("/api/auth", (await import("./routes/auth.js")).default);
+app.use("/api/plan", (await import("./routes/plan.js")).default);
+app.use("/api/tasks", (await import("./routes/task.js")).default);
+app.use(errorHandler);
 
 // Connect MongoDB
 (async () => {
