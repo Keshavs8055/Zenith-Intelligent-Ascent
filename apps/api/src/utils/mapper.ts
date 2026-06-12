@@ -10,14 +10,16 @@ export function toTaskDTO(
     title: doc.title,
     description: doc.description ?? undefined,
     dueDate: doc.dueDate ? doc.dueDate.toISOString() : undefined,
-    estimatedHours: doc.estimatedHours ?? undefined,
-    actualTimeSpent: doc.actualTimeSpent ?? undefined,
-    scheduledTime: doc.scheduledTime
-      ? doc.scheduledTime.toISOString()
-      : undefined,
-    completed: doc.completed,
-    progress: doc.progress ?? 0,
-    routineId: doc.routineId ? doc.routineId.toString() : undefined,
+    date: doc.date ? doc.date.toISOString() : (doc.dueDate ? doc.dueDate.toISOString() : undefined),
+    status: doc.status || 'pending',
+    estimatedPomodoros: doc.estimatedPomodoros ?? 1,
+    completedPomodoros: doc.completedPomodoros ?? 0,
+    skipCount: doc.skipCount ?? 0,
+    priority: doc.priority ?? 0,
+    avoidanceScore: doc.avoidanceScore ?? 0,
+    lastInteractedAt: doc.lastInteractedAt ? doc.lastInteractedAt.toISOString() : undefined,
+    userId: doc.userId?.toString(),
+    planId: doc.planId?.toString(),
     createdAt:
       "createdAt" in doc && doc.createdAt
         ? doc.createdAt.toISOString()

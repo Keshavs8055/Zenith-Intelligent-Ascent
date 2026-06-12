@@ -1,10 +1,6 @@
 "use client";
 
 import {
-  Home,
-  CheckSquare,
-  BarChart3,
-  Settings,
   LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,23 +9,7 @@ import { cn } from "../lib/utils";
 import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 import Link from "next/link";
 
-/* ----------------- ProgressBar ----------------- */
-export interface ProgressBarProps {
-  value: number; // percentage 0–100
-}
 
-export function ProgressBar({ value }: ProgressBarProps) {
-  const safeValue = Math.min(Math.max(value, 0), 100);
-
-  return (
-    <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-      <div
-        className="bg-indigo-500 h-2 transition-all"
-        style={{ width: `${safeValue}%` }}
-      />
-    </div>
-  );
-}
 
 /* ----------------- Modal ----------------- */
 export interface ModalProps {
@@ -68,36 +48,7 @@ export function Modal({ open, onClose, children }: ModalProps) {
   );
 }
 
-/* ----------------- MobileNav ----------------- */
-interface NavItem {
-  label: string;
-  icon: LucideIcon;
-  href: string;
-}
 
-const navItems: NavItem[] = [
-  { label: "Home", icon: Home, href: "/" },
-  { label: "Tasks", icon: CheckSquare, href: "/tasks" },
-  { label: "Progress", icon: BarChart3, href: "/progress" },
-  { label: "Settings", icon: Settings, href: "/settings" },
-];
-
-export function MobileNav() {
-  return (
-    <nav className="fixed bottom-0 left-0 w-full bg-black/40 backdrop-blur-md border-t border-gray-800 flex justify-around py-2">
-      {navItems.map(({ label, icon: Icon, href }) => (
-        <a
-          key={label}
-          href={href}
-          className="flex flex-col items-center text-xs text-gray-400 hover:text-white"
-        >
-          <Icon size={20} />
-          {label}
-        </a>
-      ))}
-    </nav>
-  );
-}
 
 /* ----------------- Card ----------------- */
 export interface CardProps {

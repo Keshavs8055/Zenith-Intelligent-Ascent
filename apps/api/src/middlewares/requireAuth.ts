@@ -19,12 +19,14 @@ export const requireAuth = async (
   next: NextFunction
 ) => {
   try {
-    const authHeader = req.headers["authorization"];
-    if (!authHeader) {
-      return sendResponse(res, 401, undefined, "User needs to be logged in.");
+    let token = req.cookies?.accessToken;
+    
+    // Fallback manual parser to guarantee compatibility even if cookie-parser isn't mounted correctly on the root router
+    if (!token && req.headers.cookie) {
+      const match = req.headers.cookie.match(/(?:^|;\s*)accessToken=([^;]*)/);
+      if (match) token = match[1];
     }
 
-    const token = authHeader.split(" ")[1];
     if (!token) {
       return sendResponse(res, 401, undefined, "User needs to be logged in.");
     }

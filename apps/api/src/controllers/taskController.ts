@@ -1,97 +1,124 @@
 import TaskModel from "../models/task.js";
 import { catchAsync, sendResponse } from "../utils/globalWrapper.js";
 import { AuthenticatedRequest } from "../middlewares/requireAuth.js";
-import { CreateTaskSchema, UpdateTaskSchema, Task } from "@zenith/types";
-import { toTaskDTO } from "utils/mapper.js";
+import { getTodayTasks, getNextTask } from "../services/taskService.js";
+import { getTodaySummary } from "../utils/summary.js";
+import { AppError } from "../utils/appError.js";
+import { UpdateProgressSchema, CreateTaskSchema } from "@zenith/types";
+import { z } from "zod";
+import TaskLogModel from "../models/taskLog.js";
 
-// -------------------- Create Task --------------------
-export const CreateTaskController = catchAsync(
-  async (req: AuthenticatedRequest, res) => {
-    const parsed = CreateTaskSchema.parse(req.body);
+// -------------------- Create New Single Task --------------------
+export const CreateTaskController = catchAsync(async (req: AuthenticatedRequest, res) => {
+  const parsed = CreateTaskSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new AppError("Invalid task schema", 400, true);
+  }
 
-    const taskDoc = await TaskModel.create({
-      ...parsed,
-      userId: req.user!.id,
+  const { title, description, dueDate, planId, estimatedPomodoros } = parsed.data;
+  const userId = req.user!.id;
+
+  const task = await TaskModel.create({
+    userId,
+    planId,
+    title,
+    description,
+    dueDate: dueDate ? new Date(dueDate) : undefined,
+    estimatedPomodoros
+  });
+
+  return sendResponse(res, 201, task, "Task created");
+});
+
+// -------------------- Get Today Tasks & Summary --------------------
+export const GetTodayTasksController = catchAsync(async (req: AuthenticatedRequest, res) => {
+  const userId = req.user!.id;
+  
+  // The summary needs all tasks (including completed ones that are due today)
+  const allTodayTasks = await getTodayTasks(userId, true);
+  const summary = getTodaySummary(allTodayTasks);
+
+  // The main list only returns pending tasks
+  const pendingTasks = allTodayTasks.filter(t => t.status !== 'completed');
+
+  return sendResponse(res, 200, { tasks: pendingTasks, summary }, "Today tasks fetched");
+});
+
+// -------------------- Get Single Promoted Next Task --------------------
+export const GetNextTaskController = catchAsync(async (req: AuthenticatedRequest, res) => {
+  const userId = req.user!.id;
+  const task = await getNextTask(userId);
+  return sendResponse(res, 200, { task }, "Next task fetched");
+});
+
+// -------------------- Patch Execution Progress --------------------
+export const UpdateProgressController = catchAsync(async (req: AuthenticatedRequest, res) => {
+  const parsed = UpdateProgressSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new AppError("Invalid progress update schema", 400, true);
+  }
+
+  const { action, reflection } = parsed.data;
+  const userId = req.user!.id;
+
+  const task = await TaskModel.findOne({ _id: req.params.id, userId });
+  if (!task) throw new AppError("Task not found", 404);
+
+  const now = new Date();
+
+  if (action === "complete_pomodoro") {
+    task.completedPomodoros += 1;
+    task.lastInteractedAt = now;
+  } else if (action === "complete_task") {
+    task.status = 'completed';
+    task.lastInteractedAt = now;
+    
+    await TaskLogModel.create({
+      taskId: task._id,
+      action: 'completed',
+      note: reflection?.reason,
     });
-
-    // Convert mongoose doc → plain object
-    const task: Task = toTaskDTO(taskDoc);
-
-    return sendResponse<Task>(res, 201, task, "Task created successfully");
+  } else if (action === "skip") {
+    task.skipCount += 1;
+    task.avoidanceScore += 1; // Increment avoidance score on skip
+    task.lastInteractedAt = now;
+    
+    if (reflection) {
+      await TaskLogModel.create({
+        taskId: task._id,
+        action: 'skipped',
+        note: `Reason: ${reflection.reason} | Difficulty: ${reflection.difficulty}`
+      });
+    }
   }
-);
 
-// -------------------- Get All Tasks --------------------
-export const GetTasksController = catchAsync(
-  async (req: AuthenticatedRequest, res) => {
-    const tasks = await TaskModel.find({ userId: req.user!.id }).lean();
+  await task.save();
+  return sendResponse(res, 200, task, "Task progress updated");
+});
 
-    // tasks is `any` → cast to Task[]
-    return sendResponse<Task[]>(
-      res,
-      200,
-      tasks.map(toTaskDTO),
-      "Tasks fetched successfully"
-    );
-  }
-);
+// -------------------- Optional explicit reflection --------------------
+const ReflectionPayloadSchema = z.object({
+  type: z.enum(["completed", "skipped"]),
+  reason: z.string(),
+  difficulty: z.enum(["easy", "medium", "hard"]).optional()
+});
 
-// -------------------- Get Single Task --------------------
-export const GetTaskController = catchAsync(
-  async (req: AuthenticatedRequest, res) => {
-    const task = await TaskModel.findOne({
-      _id: req.params.id,
-      userId: req.user!.id,
-    }).lean();
+export const AddReflectionController = catchAsync(async (req: AuthenticatedRequest, res) => {
+  const parsed = ReflectionPayloadSchema.safeParse(req.body);
+  if (!parsed.success) throw new AppError("Invalid reflection schema", 400, true);
+  
+  const { type, reason, difficulty } = parsed.data;
+  const userId = req.user!.id;
 
-    if (!task) return sendResponse(res, 404, undefined, "Task not found");
+  const task = await TaskModel.findOne({ _id: req.params.id, userId });
+  if (!task) throw new AppError("Task not found", 404);
 
-    return sendResponse<Task>(
-      res,
-      200,
-      toTaskDTO(task),
-      "Task fetched successfully"
-    );
-  }
-);
+  await TaskLogModel.create({
+    taskId: task._id,
+    action: type === 'completed' ? 'completed' : 'skipped',
+    note: `Reason: ${reason} | Difficulty: ${difficulty}`
+  });
 
-// -------------------- Update Task --------------------
-export const UpdateTaskController = catchAsync(
-  async (req: AuthenticatedRequest, res) => {
-    const parsed = UpdateTaskSchema.parse(req.body);
-
-    const updated = await TaskModel.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user!.id },
-      parsed,
-      { new: true, lean: true }
-    );
-
-    if (!updated) return sendResponse(res, 404, undefined, "Task not found");
-
-    return sendResponse<Task>(
-      res,
-      200,
-      toTaskDTO(updated),
-      "Task updated successfully"
-    );
-  }
-);
-
-// -------------------- Delete Task --------------------
-export const DeleteTaskController = catchAsync(
-  async (req: AuthenticatedRequest, res) => {
-    const deleted = await TaskModel.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user!.id,
-    }).lean();
-
-    if (!deleted) return sendResponse(res, 404, undefined, "Task not found");
-
-    return sendResponse<Task>(
-      res,
-      200,
-      toTaskDTO(deleted),
-      "Task deleted successfully"
-    );
-  }
-);
+  await task.save();
+  return sendResponse(res, 200, task, "Reflection added");
+});

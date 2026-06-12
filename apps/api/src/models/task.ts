@@ -1,31 +1,38 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface ITask extends Document {
+  userId: Schema.Types.ObjectId;
+  planId?: Schema.Types.ObjectId;
   title: string;
   description?: string;
   dueDate?: Date;
-  completed: boolean;
-  progress: number;
-  estimatedHours?: number;
-  actualTimeSpent?: number;
-  userId: Schema.Types.ObjectId;
-  routineId?: string;
-  scheduledTime?: Date;
+  date?: Date;
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  estimatedPomodoros: number;
+  completedPomodoros: number;
+  skipCount: number;
+  priority: number;
+  avoidanceScore: number;
+  lastInteractedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const TaskSchema = new Schema<ITask>(
   {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    planId: { type: Schema.Types.ObjectId, ref: "Plan" },
     title: { type: String, required: true },
     description: { type: String },
     dueDate: { type: Date },
-    completed: { type: Boolean, default: false },
-    progress: { type: Number, default: 0 }, // %
-    estimatedHours: { type: Number },
-    actualTimeSpent: { type: Number },
-    scheduledTime: { type: Date },
-
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    routineId: { type: Schema.Types.ObjectId, ref: "Routine" },
+    date: { type: Date },
+    status: { type: String, enum: ['pending', 'in_progress', 'completed', 'skipped'], default: 'pending' },
+    estimatedPomodoros: { type: Number, default: 1 },
+    completedPomodoros: { type: Number, default: 0 },
+    skipCount: { type: Number, default: 0 },
+    priority: { type: Number, default: 0 },
+    avoidanceScore: { type: Number, default: 0 },
+    lastInteractedAt: { type: Date },
   },
   { timestamps: true }
 );

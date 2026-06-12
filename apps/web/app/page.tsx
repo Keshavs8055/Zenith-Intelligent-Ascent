@@ -5,26 +5,25 @@ import Link from "next/link";
 
 export default function HomePage() {
   const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 text-gray-100 flex flex-col">
-      {/* Scrollable content */}
-      <main className="flex-1 pt-20 pb-10 overflow-y-auto">
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-gray-800">
+      <main className="flex-1 pt-20 pb-10 overflow-y-auto w-full max-w-xl mx-auto">
         {/* Hero */}
-        <section className="flex flex-col items-center justify-center px-4 text-center min-h-[80vh]">
-          <div className="mb-2 text-3xl md:text-5xl">
+        <section className="flex flex-col items-center text-center min-h-[60vh] justify-center px-4">
+          <div className="mb-4">
             <Logo />
           </div>
           <motion.h1
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="text-3xl md:text-5xl font-light tracking-tight mb-4 leading-tight"
+            className="text-4xl font-light tracking-tight mb-4 leading-tight"
           >
-            Calm Productivity
+            Calm Execution.
           </motion.h1>
 
           <motion.p
@@ -32,38 +31,31 @@ export default function HomePage() {
             initial="hidden"
             animate="show"
             transition={{ delay: 0.3 }}
-            className="text-gray-400 max-w-sm md:max-w-md mb-8 text-sm md:text-base"
+            className="text-gray-400 max-w-sm mb-12 text-sm"
           >
-            Focus on what matters — a minimal workspace powered by AI.
+            Focus purely on what matters — a minimal workspace driven by intelligent execution.
           </motion.p>
-          <Link
-            href="/auth"
-            className="w-full flex justify-center"
-          >
+          
+          <Link href="/auth" className="w-full flex justify-center">
             <motion.button
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0px 0px 20px rgba(99,102,241,0.6)",
-              }}
-              whileTap={{ scale: 0.97 }}
-              className="px-5 py-3 rounded-2xl bg-indigo-600/80 hover:bg-indigo-600 transition text-sm md:text-base"
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              transition={{ delay: 0.5 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-6 py-3 border border-white text-black bg-white hover:bg-gray-200 transition text-sm font-medium uppercase tracking-widest rounded-sm"
             >
               Get Started
             </motion.button>
           </Link>
         </section>
+        
         {/* Features */}
-        <section
-          id="features"
-          className="py-12 px-4 grid gap-6 sm:grid-cols-2 md:grid-cols-3 max-w-5xl mx-auto"
-        >
+        <section className="py-12 px-4 space-y-12 max-w-sm mx-auto">
           {[
-            { title: "Clarity", text: "A serene, distraction-free design." },
-            {
-              title: "AI Collaboration",
-              text: "Quietly assist your progress.",
-            },
-            { title: "Flow", text: "Align tasks, routines, and goals." },
+            { title: "Clarity", text: "A serene, distraction-free environment." },
+            { title: "Execution", text: "Actions prioritized deliberately without friction." },
+            { title: "Flow", text: "Endless scrolling replaced with decisive timers." },
           ].map((f, i) => (
             <motion.div
               key={i}
@@ -72,10 +64,10 @@ export default function HomePage() {
               whileInView="show"
               viewport={{ once: true }}
               transition={{ delay: i * 0.2 }}
-              className="p-5 rounded-2xl bg-white/5 border border-gray-800 backdrop-blur-md text-left"
+              className="text-center"
             >
-              <h3 className="text-lg font-medium mb-2">{f.title}</h3>
-              <p className="text-gray-400 text-sm">{f.text}</p>
+              <h3 className="text-base font-medium mb-1 tracking-wide">{f.title}</h3>
+              <p className="text-gray-500 text-sm">{f.text}</p>
             </motion.div>
           ))}
         </section>
@@ -87,9 +79,9 @@ export default function HomePage() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
-        className="py-6 text-center text-gray-600 text-xs md:text-sm border-t border-gray-900"
+        className="py-12 text-center text-gray-700 text-xs font-mono uppercase tracking-widest"
       >
-        © 2025 Zenith
+        © 2026 ZENITH APP
       </motion.footer>
     </div>
   );

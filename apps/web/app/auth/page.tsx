@@ -1,14 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
+import { useRouter } from "next/navigation";
 import { Logo } from "../components/common";
 import AuthTabs from "./components/tabs";
 import LoginForm from "./components/loginForm";
 import SignupForm from "./components/signupForm";
+import { useAuth } from "../context/AuthContext";
 
 export default function AuthPage() {
   const [tab, setTab] = useState<"login" | "signup">("login");
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  if (loading || user) return <div className="min-h-screen bg-black border-red-500" />;
 
   return (
     <>

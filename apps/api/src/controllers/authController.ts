@@ -29,13 +29,17 @@ export const UserSignUpController = catchAsync(async (req, res) => {
   const refreshToken = generateToken(user.id, user.email, user.role, "7d");
   user.refreshToken = refreshToken;
   await user.save();
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
 
   const token = generateToken(user.id, user.email, user.role, "1h");
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+  };
+
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie("accessToken", token, cookieOptions);
 
   const session: Session = {
     user: {
@@ -63,11 +67,14 @@ export const UserLoginController = catchAsync(async (req, res) => {
   const token = generateToken(user.id, user.email, user.role, "1h");
   const refreshToken = generateToken(user.id, user.email, user.role, "7d");
 
-  res.cookie("refreshToken", refreshToken, {
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+    sameSite: "strict" as const,
+  };
+
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+  res.cookie("accessToken", token, cookieOptions);
 
   const session: Session = {
     user: {
@@ -127,14 +134,23 @@ export const RefreshTokenController = catchAsync(async (req, res) => {
 });
 
 export const LogoutController = catchAsync(async (req, res) => {
-  const token = req.cookies.refreshToken;
+  let token = req.cookies?.refreshToken;
+  if (!token && req.headers.cookie) {
+    const match = req.headers.cookie.match(/(?:^|;\s*)refreshToken=([^;]*)/);
+    if (match) token = match[1];
+  }
+
   if (token) {
     const decoded = jwt.decode(token) as { id: string };
-    await UserModel.findByIdAndUpdate(decoded.id, {
-      $unset: { refreshToken: "" },
-    });
-    res.clearCookie("refreshToken");
+    if (decoded && decoded.id) {
+      await UserModel.findByIdAndUpdate(decoded.id, {
+        $unset: { refreshToken: "" },
+      });
+    }
   }
+  
+  res.clearCookie("refreshToken");
+  res.clearCookie("accessToken");
   return sendResponse(res, 200, { message: "Logged out successfully" });
 });
 

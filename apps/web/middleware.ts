@@ -8,7 +8,7 @@ const protectedRoutes = ["/dashboard", "/settings", "/tasks"];
 const publicRoutes = ["/", "/auth", "/about"];
 
 export function middleware(req: NextRequest) {
-  const session = req.cookies.get("session"); // adjust based on your auth
+  const session = req.cookies.get("refreshToken");
   const { pathname } = req.nextUrl;
 
   // Check if current path starts with any protected route
@@ -25,9 +25,8 @@ export function middleware(req: NextRequest) {
   }
 
   // 🚀 Redirect logged-in users away from public routes like "/" or "/auth"
-  if (isPublic && session) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
+  // We remove this to prevent infinite loops if the frontend localstorage gets out of sync with the httpOnly cookie.
+  // The client side logic will redirect them as appropriate.
 
   return NextResponse.next();
 }

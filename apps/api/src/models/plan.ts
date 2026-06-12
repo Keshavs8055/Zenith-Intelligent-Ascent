@@ -5,10 +5,6 @@ export interface IPlan extends Document {
   title: string;
   prompt: string;
   taskIds: Schema.Types.ObjectId[];
-  deadline?: Date | null;
-  hoursPerDay?: number | null;
-  status: "active" | "completed" | "archived";
-  adaptive: boolean; // AI allowed to reschedule?
 }
 
 const PlanSchema = new Schema<IPlan>(
@@ -17,14 +13,6 @@ const PlanSchema = new Schema<IPlan>(
     title: { type: String, required: true },
     prompt: { type: String, required: true },
     taskIds: [{ type: Schema.Types.ObjectId, ref: "Task" }],
-    deadline: { type: Date },
-    hoursPerDay: { type: Number },
-    status: {
-      type: String,
-      enum: ["active", "completed", "archived"],
-      default: "active",
-    },
-    adaptive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

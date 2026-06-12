@@ -9,26 +9,67 @@ import { generatePlanWithAI } from "../services/aiService.js";
 import mongoose from "mongoose";
 import { AppError } from "../utils/appError.js";
 
-/**
- * Generate plan controller:
- * - validate input (zod),
- * - call AI,
- * - validate AI response,
- * - create tasks & plan inside a MongoDB transaction (atomic),
- * - fallback gracefully to pre-defined plan if AI fails.
- */
+export const GetPlansController = catchAsync(
+  async (req: AuthenticatedRequest, res) => {
+    const plans = await PlanModel.find({ userId: req.user!.id }).lean();
+    
+    return sendResponse<any[]>(
+      res,
+      200,
+      plans.map(p => toPlanDTO(p)),
+      "Plans fetched successfully"
+    );
+  }
+);
+
+export const GetPlanByIdController = catchAsync(
+  async (req: AuthenticatedRequest, res) => {
+    const plan = await PlanModel.findOne({ _id: req.params.id, userId: req.user!.id });
+    if (!plan) throw new AppError("Plan not found", 404);
+    
+    return sendResponse<PlanType>(res, 200, toPlanDTO(plan as any), "Plan fetched successfully");
+  }
+);
+
+export const GetPlanTasksController = catchAsync(
+  async (req: AuthenticatedRequest, res) => {
+    const tasks = await TaskModel.find({ planId: req.params.id, userId: req.user!.id }).lean();
+    
+    // Quick mapper (frontend wants DTO tasks format)
+    const taskDTOs = tasks.map(t => ({
+      id: t._id.toString(),
+      userId: t.userId,
+      planId: t.planId?.toString(),
+      title: t.title,
+      description: t.description,
+      dueDate: t.dueDate?.toISOString(),
+      date: t.date?.toISOString(),
+      status: t.status,
+      estimatedPomodoros: t.estimatedPomodoros,
+      completedPomodoros: t.completedPomodoros,
+      skipCount: t.skipCount,
+      priority: t.priority,
+      avoidanceScore: t.avoidanceScore,
+      lastInteractedAt: t.lastInteractedAt?.toISOString(),
+      createdAt: t.createdAt?.toISOString() ?? new Date().toISOString(),
+      updatedAt: t.updatedAt?.toISOString() ?? new Date().toISOString(),
+    }));
+
+    return sendResponse<any[]>(res, 200, taskDTOs, "Tasks fetched successfully");
+  }
+);
+
 export const GeneratePlanController = catchAsync(
   async (req: AuthenticatedRequest, res) => {
     // ✅ Step 1: Validate input
 
     const parsed = GeneratePlanSchema.safeParse(req.body);
-    console.log(parsed);
 
     if (!parsed.success) {
       throw new AppError("Invalid input data", 400, true);
     }
 
-    const { prompt, deadline, hoursPerDay } = parsed.data;
+    const { prompt } = parsed.data;
 
     // ✅ Step 2: Ensure user
     const userId = req.user?.id;
@@ -41,12 +82,22 @@ export const GeneratePlanController = catchAsync(
     try {
       aiResponse = await generatePlanWithAI(prompt);
     } catch (err) {
-      console.error("AI service failed:", err);
-      throw new AppError("Failed to generate plan using AI", 502);
+      console.error("AI service failed in catch block:", err);
+      aiResponse = {
+        planTitle: "Offline Local Override",
+        tasks: [
+          {
+            title: "Diagnose local environment",
+            description: "No structural AI models are available. Deploying fallback tasks.",
+            dueDate: new Date().toISOString(),
+            estimatedPomodoros: 1
+          }
+        ]
+      };
     }
 
     if (!aiResponse.tasks?.length) {
-      throw new AppError("AI response did not return any tasks", 500);
+      throw new AppError("AI response did not return any tasks globally", 500);
     }
 
     // ✅ Step 4: Prepare tasks
@@ -55,6 +106,7 @@ export const GeneratePlanController = catchAsync(
       return {
         title: t.title,
         description: t.description ?? "",
+        estimatedPomodoros: t.estimatedPomodoros ?? 1,
         dueDate:
           dueDate instanceof Date && !isNaN(dueDate.getTime())
             ? dueDate
@@ -75,13 +127,16 @@ export const GeneratePlanController = catchAsync(
             userId,
             title: aiResponse.planTitle ?? "Generated Plan",
             prompt,
-            deadline: deadline ?? undefined,
-            hoursPerDay: hoursPerDay ?? undefined,
             taskIds: createdTasks.map((t) => t._id),
           },
         ],
         { session }
       );
+
+      // Link tasks back to Plan.
+      const planId = planDoc._id;
+      const tIds = createdTasks.map(t => t._id);
+      await TaskModel.updateMany({ _id: { $in: tIds } }, { planId }, { session });
 
       await session.commitTransaction();
       session.endSession();

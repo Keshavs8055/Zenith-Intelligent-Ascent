@@ -2,13 +2,16 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { errorHandler } from "middlewares/errorHandler.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}));
 app.use(express.json());
 
 // Health Check
@@ -19,9 +22,9 @@ app.get("/health", (_, res) =>
 );
 
 // Routes
-app.use("/api/auth", (await import("./routes/auth.js")).default);
-app.use("/api/plan", (await import("./routes/plan.js")).default);
-app.use("/api/tasks", (await import("./routes/task.js")).default);
+app.use("/api/auth", (await import("./routes/authRoutes.js")).default);
+app.use("/api/plan", (await import("./routes/planRoutes.js")).default);
+app.use("/api/tasks", (await import("./routes/taskRoutes.js")).default);
 app.use(errorHandler);
 
 // Connect MongoDB
